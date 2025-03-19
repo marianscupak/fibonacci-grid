@@ -1,20 +1,18 @@
 import { useState } from 'react';
 import { Cell } from './Cell.tsx';
-
-interface Coordinates {
-  rowIndex: number;
-  cellIndex: number;
-}
+import { Coordinates } from '../types/coordinates.ts';
+import { useFibonacciCheck } from '../utils/use-fibonacci-check.ts';
 
 interface Props {
   width: number;
   height: number;
 }
 
-const HIGHLIGHT_TIMEOUT = 500;
+export const HIGHLIGHT_TIMEOUT = 500;
+export const DEFAULT_GRID_VALUE = 1;
 
 export const Grid = ({ width, height }: Props) => {
-  const [gridState, setGridState] = useState<number[][]>(Array(height).fill(Array(width).fill(1)));
+  const [gridState, setGridState] = useState<number[][]>(Array(height).fill(Array(width).fill(DEFAULT_GRID_VALUE)));
   const [clickedCell, setClickedCell] = useState<Coordinates | null>(null);
 
   const getOnClickHandler = (rowIndex: number, cellIndex: number) => () => {
@@ -28,6 +26,8 @@ export const Grid = ({ width, height }: Props) => {
     setTimeout(() => setClickedCell(null), HIGHLIGHT_TIMEOUT);
   };
 
+  const { matchedCells } = useFibonacciCheck({ gridState, setGridState });
+
   return (
     <div className="flex flex-col gap-1">
       {gridState.map((row, rowIndex) => (
@@ -38,7 +38,14 @@ export const Grid = ({ width, height }: Props) => {
               value={cellValue}
               onClick={getOnClickHandler(rowIndex, cellIndex)}
               backgroundColor={
-                clickedCell?.rowIndex === rowIndex || clickedCell?.cellIndex === cellIndex ? 'yellow' : undefined
+                matchedCells?.find(
+                  ({ rowIndex: matchedRowIndex, cellIndex: matchedCellIndex }) =>
+                    rowIndex === matchedRowIndex && cellIndex === matchedCellIndex
+                )
+                  ? 'green'
+                  : clickedCell?.rowIndex === rowIndex || clickedCell?.cellIndex === cellIndex
+                    ? 'yellow'
+                    : undefined
               }
             />
           ))}
